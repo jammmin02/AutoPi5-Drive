@@ -31,7 +31,7 @@ current_angle = 30  # 서보모터 초기 각도
 current_speed = 0   # DC 모터 초기 속도
 
 ANGLE_INCREMENT = 5  # 서보모터 각도 변화량
-SPEED_INCREMENT = 10  # 속도 증가 단위
+SPEED_INCREMENT = 2  # 속도 증가 단위
 MAX_SPEED = 100  # DC 모터 최대 속도
 
 # 각도 범위를 5개로 나눔
@@ -120,7 +120,7 @@ def on_release(key):
 cmd = 'libcamera-vid --inline --nopreview -t 0 --codec mjpeg --width 640 --height 480 --framerate 15 -o - --camera 0'
 process = subprocess.Popen(shlex.split(cmd), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
-capture_interval = 2  # 캡처 간격 (3초)
+capture_interval = 1  # 캡처 간격 (3초)
 last_capture_time = time.time()
 
 def capture_images():
