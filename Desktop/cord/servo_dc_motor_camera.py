@@ -120,7 +120,7 @@ def on_release(key):
 cmd = 'libcamera-vid --inline --nopreview -t 0 --codec mjpeg --width 640 --height 480 --framerate 30 -o - --camera 0'
 process = subprocess.Popen(shlex.split(cmd), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
-capture_interval = 1  # 캡처 간격 (1초)
+capture_interval = 5  # 캡처 간격 (5초)
 last_capture_time = time.time()
 
 def capture_images():
@@ -128,30 +128,32 @@ def capture_images():
     buffer = b""
     while len(captured_ranges) < len(ANGLE_RANGES):
         current_time = time.time()
-        buffer += process.stdout.read(4096)
-        a = buffer.find(b'\xff\xd8')
-        b = buffer.find(b'\xff\xd9')
-        if a != -1 and b != -1:
-            jpg = buffer[a:b+2]
-            buffer = buffer[b+2:]
-            bgr_frame = cv2.imdecode(np.frombuffer(jpg, dtype=np.uint8), cv2.IMREAD_COLOR)
-            if bgr_frame is not None:
-                # 캡처 조건: 각도가 특정 범위에 속하고 해당 범위가 캡처되지 않은 경우
-                angle_range = get_angle_range(current_angle)
-                if angle_range != -1:
-                    range_folder = os.path.join(base_save_path, f"range_{angle_range}")
-                    now = datetime.datetime.now().strftime('%y%m%d_%H%M%S')
-                    filename = os.path.join(range_folder, f"{now}.jpg")
-                    try:
-                        if cv2.imwrite(filename, bgr_frame):
-                            print(f"이미지 저장 성공: {filename}")
-                            captured_ranges.add(angle_range)  # 저장된 범위 추가
-                        else:
-                            print(f"이미지 저장 실패: {filename}")
-                    except Exception as e:
-                        print(f"이미지 저장 중 에러 발생: {e}")
-                if cv2.waitKey(1) & 0xFF == ord('q'):
-                    break
+        if current_time - last_capture_time >= capture_interval:
+            buffer += process.stdout.read(4096)
+            a = buffer.find(b'\xff\xd8')
+            b = buffer.find(b'\xff\xd9')
+            if a != -1 and b != -1:
+                jpg = buffer[a:b+2]
+                buffer = buffer[b+2:]
+                bgr_frame = cv2.imdecode(np.frombuffer(jpg, dtype=np.uint8), cv2.IMREAD_COLOR)
+                if bgr_frame is not None:
+                    # 캡처 조건: 각도가 특정 범위에 속하고 해당 범위가 캡처되지 않은 경우
+                    angle_range = get_angle_range(current_angle)
+                    if angle_range != -1:
+                        range_folder = os.path.join(base_save_path, f"range_{angle_range}")
+                        now = datetime.datetime.now().strftime('%y%m%d_%H%M%S')
+                        filename = os.path.join(range_folder, f"{now}.jpg")
+                        try:
+                            if cv2.imwrite(filename, bgr_frame):
+                                print(f"이미지 저장 성공: {filename}")
+                                captured_ranges.add(angle_range)  # 저장된 범위 추가
+                                last_capture_time = current_time  # 마지막 캡처 시간 업데이트
+                            else:
+                                print(f"이미지 저장 실패: {filename}")
+                        except Exception as e:
+                            print(f"이미지 저장 중 에러 발생: {e}")
+                    if cv2.waitKey(1) & 0xFF == ord('q'):
+                        break
 
 # === 프로그램 실행 ===
 try:
