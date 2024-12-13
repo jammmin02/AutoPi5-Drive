@@ -120,7 +120,7 @@ def on_release(key):
 cmd = 'libcamera-vid --inline --nopreview -t 0 --codec mjpeg --width 640 --height 480 --framerate 15 -o - --camera 0'
 process = subprocess.Popen(shlex.split(cmd), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
-capture_interval = 3  # 캡처 간격 (3초)
+capture_interval = 2  # 캡처 간격 (3초)
 last_capture_time = time.time()
 
 def capture_images():
