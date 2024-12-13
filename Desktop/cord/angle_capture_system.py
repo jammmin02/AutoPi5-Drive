@@ -31,7 +31,7 @@ current_angle = 30  # 서보모터 초기 각도
 current_speed = 0   # DC 모터 초기 속도
 
 ANGLE_INCREMENT = 5  # 서보모터 각도 변화량
-SPEED_INCREMENT = 20  # 속도 증가 단위
+SPEED_INCREMENT = 10  # 속도 증가 단위
 MAX_SPEED = 100  # DC 모터 최대 속도
 
 # 각도 범위를 5개로 나눔
