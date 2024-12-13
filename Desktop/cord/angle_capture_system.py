@@ -27,7 +27,7 @@ dc_motor_pwm = GPIO.PWM(ENA, 100)   # DC 모터: 100Hz PWM
 servo_pwm.start(0)
 dc_motor_pwm.start(0)
 
-current_angle = 90  # 서보모터 초기 각도
+current_angle = 30  # 서보모터 초기 각도
 current_speed = 0   # DC 모터 초기 속도
 
 ANGLE_INCREMENT = 5  # 서보모터 각도 변화량
@@ -117,7 +117,7 @@ def on_release(key):
         return False
 
 # === 카메라 설정 ===
-cmd = 'libcamera-vid --inline --nopreview -t 0 --codec mjpeg --width 320 --height 240 --framerate 15 -o - --camera 0'
+cmd = 'libcamera-vid --inline --nopreview -t 0 --codec mjpeg --width 640 --height 480 --framerate 15 -o - --camera 0'
 process = subprocess.Popen(shlex.split(cmd), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
 capture_interval = 3  # 캡처 간격 (3초)
