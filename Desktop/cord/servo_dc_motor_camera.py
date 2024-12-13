@@ -137,6 +137,9 @@ def capture_images():
                 buffer = buffer[b+2:]
                 bgr_frame = cv2.imdecode(np.frombuffer(jpg, dtype=np.uint8), cv2.IMREAD_COLOR)
                 if bgr_frame is not None:
+                    # 실시간 영상 표시
+                    cv2.imshow("Camera View", bgr_frame)
+
                     # 캡처 조건: 각도가 특정 범위에 속하고 해당 범위가 캡처되지 않은 경우
                     angle_range = get_angle_range(current_angle)
                     if angle_range != -1:
