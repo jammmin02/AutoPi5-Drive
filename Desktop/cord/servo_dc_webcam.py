@@ -34,7 +34,6 @@ MAX_SPEED = 100  # DC 모터 최대 속도
 
 # 각도 범위를 5개로 나눔
 ANGLE_RANGES = [(0, 36), (37, 72), (73, 108), (109, 144), (145, 180)]
-captured_ranges = set()  # 저장된 각도 범위 추적
 
 # 저장 경로 설정
 base_save_path = "/home/pi/AL_CAR/images"
@@ -121,12 +120,12 @@ if not cap.isOpened():
     print("웹캠을 열 수 없습니다.")
     exit()
 
-capture_interval = 2  # 캡처 간격 (2초)
+capture_interval = 0.5  # 캡처 간격 (0.5초)
 last_capture_time = time.time()
 
 def capture_images():
     global last_capture_time
-    while len(captured_ranges) < len(ANGLE_RANGES):
+    while True:  # 무한 캡처 루프
         ret, frame = cap.read()  # 웹캠에서 프레임 읽기
         if not ret:
             print("웹캠에서 프레임을 읽을 수 없습니다.")
@@ -137,16 +136,15 @@ def capture_images():
             # 실시간 영상 표시
             cv2.imshow("Camera View", frame)
 
-            # 캡처 조건: 각도가 특정 범위에 속하고 해당 범위가 캡처되지 않은 경우
+            # 캡처 조건: 각도가 특정 범위에 속할 때
             angle_range = get_angle_range(current_angle)
             if angle_range != -1:
                 range_folder = os.path.join(base_save_path, f"range_{angle_range}")
-                now = datetime.datetime.now().strftime('%y%m%d_%H%M%S')
+                now = datetime.datetime.now().strftime('%y%m%d_%H%M%S_%f')  # 파일 이름에 밀리초 포함
                 filename = os.path.join(range_folder, f"{now}.jpg")
                 try:
                     if cv2.imwrite(filename, frame):
                         print(f"이미지 저장 성공: {filename}")
-                        captured_ranges.add(angle_range)  # 저장된 범위 추가
                         last_capture_time = current_time  # 마지막 캡처 시간 업데이트
                     else:
                         print(f"이미지 저장 실패: {filename}")
