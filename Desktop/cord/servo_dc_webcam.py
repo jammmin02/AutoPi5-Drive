@@ -29,18 +29,23 @@ current_angle = 30  # 서보모터 초기 각도
 current_speed = 0   # DC 모터 초기 속도
 
 ANGLE_INCREMENT = 5  # 서보모터 각도 변화량
-SPEED_INCREMENT = 2  # 속도 증가 단위
-MAX_SPEED = 100  # DC 모터 최대 속도
+SPEED_INCREMENT = 2   # 속도 증가 단위
+MAX_SPEED = 100       # DC 모터 최대 속도
 
-# 각도 범위를 5개로 나눔
-ANGLE_RANGES = [(0, 36), (37, 72), (73, 108), (109, 144), (145, 180)]
+# === 새로운 각도 범위 설정 ===
+# 20도 단위로 좌회전, 직진, 우회전 구분
+ANGLE_RANGES = {
+    "left": (0, 20),         # 좌회전
+    "straight": (21, 40),    # 직진
+    "right": (41, 60)        # 우회전
+}
 
 # 저장 경로 설정
 base_save_path = "/home/pi/AL_CAR/images"
 
 # 폴더 생성
-for i in range(len(ANGLE_RANGES)):
-    folder_path = os.path.join(base_save_path, f"range_{i}")
+for direction in ANGLE_RANGES.keys():
+    folder_path = os.path.join(base_save_path, direction)
     os.makedirs(folder_path, exist_ok=True)
 
 def set_servo_angle(angle):
@@ -82,11 +87,12 @@ def motor_stop():
 
 set_servo_angle(current_angle)
 
-def get_angle_range(angle):
-    for i, (start, end) in enumerate(ANGLE_RANGES):
+def get_direction(angle):
+    """현재 각도에 따라 좌회전, 직진, 우회전 반환"""
+    for direction, (start, end) in ANGLE_RANGES.items():
         if start <= angle <= end:
-            return i
-    return -1  # 범위에 없으면 -1 반환
+            return direction
+    return None  # 범위에 없으면 None 반환
 
 def on_press(key):
     global current_angle
@@ -101,7 +107,7 @@ def on_press(key):
             set_servo_angle(current_angle)
             print(f"서보모터 왼쪽 회전: 각도 {current_angle}도")
         elif key == keyboard.Key.right:
-            current_angle = min(180, current_angle + ANGLE_INCREMENT)
+            current_angle = min(60, current_angle + ANGLE_INCREMENT)
             set_servo_angle(current_angle)
             print(f"서보모터 오른쪽 회전: 각도 {current_angle}도")
         elif key == keyboard.Key.space:
@@ -136,15 +142,15 @@ def capture_images():
             # 실시간 영상 표시
             cv2.imshow("Camera View", frame)
 
-            # 캡처 조건: 각도가 특정 범위에 속할 때
-            angle_range = get_angle_range(current_angle)
-            if angle_range != -1:
-                range_folder = os.path.join(base_save_path, f"range_{angle_range}")
+            # 캡처 조건: 각도에 따라 이미지 저장
+            direction = get_direction(current_angle)
+            if direction:
+                range_folder = os.path.join(base_save_path, direction)
                 now = datetime.datetime.now().strftime('%y%m%d_%H%M%S_%f')  # 파일 이름에 밀리초 포함
-                filename = os.path.join(range_folder, f"{now}.jpg")
+                filename = os.path.join(range_folder, f"{direction}_{now}.jpg")
                 try:
                     if cv2.imwrite(filename, frame):
-                        print(f"이미지 저장 성공: {filename}")
+                        print(f"이미지 저장 성공 ({direction}): {filename}")
                         last_capture_time = current_time  # 마지막 캡처 시간 업데이트
                     else:
                         print(f"이미지 저장 실패: {filename}")
