@@ -31,11 +31,11 @@ current_angle = 30  # 서보모터 초기 각도
 current_speed = 0   # DC 모터 초기 속도
 
 ANGLE_INCREMENT = 5  # 서보모터 각도 변화량
-SPEED_INCREMENT = 5  # 속도 증가 단위
+SPEED_INCREMENT = 2  # 속도 증가 단위
 MAX_SPEED = 100  # DC 모터 최대 속도
 
 # 각도 범위를 5개로 나눔
-ANGLE_RANGES = [(0, 10), (11, 20), (21, 40), (41, 50), (51, 60)]
+ANGLE_RANGES = [(0, 36), (37, 72), (73, 108), (109, 144), (145, 180)]
 captured_ranges = set()  # 저장된 각도 범위 추적
 
 # 저장 경로 설정
@@ -130,7 +130,7 @@ def on_release(key):
         return False
 
 # === 카메라 설정 ===
-cmd = 'libcamera-vid --inline --nopreview -t 0 --codec mjpeg --width 640 --height 480 --framerate 15 --roi 0.05,0.05,0.9,0.9 -o - --camera 0'
+cmd = 'libcamera-vid --inline --nopreview -t 0 --codec mjpeg --width 1280 --height 720 --framerate 15 --roi 0.1,0.1,0.8,0.8 -o - --camera 0'
 process = subprocess.Popen(shlex.split(cmd), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
 capture_interval = 2  # 캡처 간격 (2초)
