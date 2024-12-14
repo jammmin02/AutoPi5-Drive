@@ -130,7 +130,7 @@ def on_release(key):
         return False
 
 # === 카메라 설정 ===
-cmd = 'libcamera-vid --inline --nopreview -t 0 --codec mjpeg --width 1280 --height 720 --framerate 15 -o - --camera 0'
+cmd = 'libcamera-vid --inline --nopreview -t 0 --codec mjpeg --width 1920 --height 1080 --framerate 15 --roi 0.0,0.0,1.0,1.0 -o - --camera 0'
 process = subprocess.Popen(shlex.split(cmd), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
 capture_interval = 2  # 캡처 간격 (2초)
