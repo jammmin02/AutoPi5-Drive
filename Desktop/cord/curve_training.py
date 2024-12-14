@@ -54,6 +54,9 @@ def set_servo_angle(angle):
 
 def motor_forward():
     global current_speed
+    if current_speed < MAX_SPEED:
+        current_speed += SPEED_INCREMENT
+    current_speed = min(current_speed, MAX_SPEED)
     GPIO.output(IN1, GPIO.HIGH)
     GPIO.output(IN2, GPIO.LOW)
     dc_motor_pwm.ChangeDutyCycle(current_speed)
@@ -108,11 +111,15 @@ def on_press(key):
             motor_stop()
         elif key.char == '/':
             current_speed = 40
-            motor_forward()
+            GPIO.output(IN1, GPIO.HIGH)
+            GPIO.output(IN2, GPIO.LOW)
+            dc_motor_pwm.ChangeDutyCycle(current_speed)
             print("DC 모터 속도 설정: 40%")
         elif key.char == '.':
             current_speed = 20
-            motor_forward()
+            GPIO.output(IN1, GPIO.HIGH)
+            GPIO.output(IN2, GPIO.LOW)
+            dc_motor_pwm.ChangeDutyCycle(current_speed)
             print("DC 모터 속도 설정: 20%")
     except AttributeError:
         pass
