@@ -3,8 +3,6 @@ import time
 from pynput import keyboard
 import cv2
 import numpy as np
-import subprocess
-import shlex
 import datetime
 import os
 import threading
@@ -31,11 +29,11 @@ current_angle = 30  # 서보모터 초기 각도
 current_speed = 0   # DC 모터 초기 속도
 
 ANGLE_INCREMENT = 5  # 서보모터 각도 변화량
-SPEED_INCREMENT = 5  # 속도 증가 단위
+SPEED_INCREMENT = 2  # 속도 증가 단위
 MAX_SPEED = 100  # DC 모터 최대 속도
 
 # 각도 범위를 5개로 나눔
-ANGLE_RANGES = [(0, 10), (11, 20), (21, 40), (41, 50), (51, 60)]
+ANGLE_RANGES = [(0, 36), (37, 72), (73, 108), (109, 144), (145, 180)]
 captured_ranges = set()  # 저장된 각도 범위 추적
 
 # 저장 경로 설정
@@ -109,18 +107,6 @@ def on_press(key):
             print(f"서보모터 오른쪽 회전: 각도 {current_angle}도")
         elif key == keyboard.Key.space:
             motor_stop()
-        elif key.char == '/':
-            current_speed = 40
-            GPIO.output(IN1, GPIO.HIGH)
-            GPIO.output(IN2, GPIO.LOW)
-            dc_motor_pwm.ChangeDutyCycle(current_speed)
-            print("DC 모터 속도 설정: 40%")
-        elif key.char == '.':
-            current_speed = 20
-            GPIO.output(IN1, GPIO.HIGH)
-            GPIO.output(IN2, GPIO.LOW)
-            dc_motor_pwm.ChangeDutyCycle(current_speed)
-            print("DC 모터 속도 설정: 20%")
     except AttributeError:
         pass
 
@@ -129,47 +115,45 @@ def on_release(key):
         print("프로그램 종료")
         return False
 
-# === 카메라 설정 ===
-cmd = 'libcamera-vid --inline --nopreview -t 0 --codec mjpeg --width 1280 --height 720 --framerate 10 --roi 0.05,0.05,0.9,0.9 -o - --camera 0'
-process = subprocess.Popen(shlex.split(cmd), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+# === 웹캠 캡처 설정 ===
+cap = cv2.VideoCapture(0)  # USB 웹캠 연결 (0은 기본 웹캠 ID)
+if not cap.isOpened():
+    print("웹캠을 열 수 없습니다.")
+    exit()
 
 capture_interval = 2  # 캡처 간격 (2초)
 last_capture_time = time.time()
 
 def capture_images():
     global last_capture_time
-    buffer = b""
     while len(captured_ranges) < len(ANGLE_RANGES):
+        ret, frame = cap.read()  # 웹캠에서 프레임 읽기
+        if not ret:
+            print("웹캠에서 프레임을 읽을 수 없습니다.")
+            break
+        
         current_time = time.time()
         if current_time - last_capture_time >= capture_interval:
-            buffer += process.stdout.read(4096)
-            a = buffer.find(b'\xff\xd8')
-            b = buffer.find(b'\xff\xd9')
-            if a != -1 and b != -1:
-                jpg = buffer[a:b+2]
-                buffer = buffer[b+2:]
-                bgr_frame = cv2.imdecode(np.frombuffer(jpg, dtype=np.uint8), cv2.IMREAD_COLOR)
-                if bgr_frame is not None:
-                    # 실시간 영상 표시
-                    cv2.imshow("Camera View", bgr_frame)
+            # 실시간 영상 표시
+            cv2.imshow("Camera View", frame)
 
-                    # 캡처 조건: 각도가 특정 범위에 속하고 해당 범위가 캡처되지 않은 경우
-                    angle_range = get_angle_range(current_angle)
-                    if angle_range != -1:
-                        range_folder = os.path.join(base_save_path, f"range_{angle_range}")
-                        now = datetime.datetime.now().strftime('%y%m%d_%H%M%S')
-                        filename = os.path.join(range_folder, f"{now}.jpg")
-                        try:
-                            if cv2.imwrite(filename, bgr_frame):
-                                print(f"이미지 저장 성공: {filename}")
-                                captured_ranges.add(angle_range)  # 저장된 범위 추가
-                                last_capture_time = current_time  # 마지막 캡처 시간 업데이트
-                            else:
-                                print(f"이미지 저장 실패: {filename}")
-                        except Exception as e:
-                            print(f"이미지 저장 중 에러 발생: {e}")
-                    if cv2.waitKey(1) & 0xFF == ord('q'):
-                        break
+            # 캡처 조건: 각도가 특정 범위에 속하고 해당 범위가 캡처되지 않은 경우
+            angle_range = get_angle_range(current_angle)
+            if angle_range != -1:
+                range_folder = os.path.join(base_save_path, f"range_{angle_range}")
+                now = datetime.datetime.now().strftime('%y%m%d_%H%M%S')
+                filename = os.path.join(range_folder, f"{now}.jpg")
+                try:
+                    if cv2.imwrite(filename, frame):
+                        print(f"이미지 저장 성공: {filename}")
+                        captured_ranges.add(angle_range)  # 저장된 범위 추가
+                        last_capture_time = current_time  # 마지막 캡처 시간 업데이트
+                    else:
+                        print(f"이미지 저장 실패: {filename}")
+                except Exception as e:
+                    print(f"이미지 저장 중 에러 발생: {e}")
+            if cv2.waitKey(1) & 0xFF == ord('q'):
+                break
 
 # === 프로그램 실행 ===
 try:
@@ -180,7 +164,7 @@ try:
 except KeyboardInterrupt:
     pass
 finally:
-    process.terminate()
+    cap.release()
     cv2.destroyAllWindows()
     servo_pwm.stop()
     dc_motor_pwm.stop()
