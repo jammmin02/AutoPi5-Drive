@@ -93,6 +93,7 @@ def get_angle_range(angle):
 
 def on_press(key):
     global current_angle
+    global current_speed
     try:
         if key == keyboard.Key.up:
             motor_forward()
@@ -108,6 +109,18 @@ def on_press(key):
             print(f"서보모터 오른쪽 회전: 각도 {current_angle}도")
         elif key == keyboard.Key.space:
             motor_stop()
+        elif key.char == '/':
+            current_speed = 40
+            GPIO.output(IN1, GPIO.HIGH)
+            GPIO.output(IN2, GPIO.LOW)
+            dc_motor_pwm.ChangeDutyCycle(current_speed)
+            print("DC 모터 속도 설정: 40%")
+        elif key.char == '.':
+            current_speed = 20
+            GPIO.output(IN1, GPIO.HIGH)
+            GPIO.output(IN2, GPIO.LOW)
+            dc_motor_pwm.ChangeDutyCycle(current_speed)
+            print("DC 모터 속도 설정: 20%")
     except AttributeError:
         pass
 
@@ -117,10 +130,10 @@ def on_release(key):
         return False
 
 # === 카메라 설정 ===
-cmd = 'libcamera-vid --inline --nopreview -t 0 --codec mjpeg --width 1280 --height 720 --framerate 15 -o - --camera 0'
+cmd = 'libcamera-vid --inline --nopreview -t 0 --codec mjpeg --width 1280 --height 720 --framerate 15 --roi 0.1,0.1,0.8,0.8 -o - --camera 0'
 process = subprocess.Popen(shlex.split(cmd), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
-capture_interval = 2  # 캡처 간격 (3초)
+capture_interval = 2  # 캡처 간격 (2초)
 last_capture_time = time.time()
 
 def capture_images():
