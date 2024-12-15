@@ -48,12 +48,14 @@ for direction in ANGLE_RANGES.keys():
     os.makedirs(folder_path, exist_ok=True)
 
 def set_servo_angle(angle):
+    """서보모터 각도를 설정합니다."""
     duty = 2 + (angle / 18)
     servo_pwm.ChangeDutyCycle(duty)
-    time.sleep(0.1)
+    time.sleep(0.3)  # 신호 유지 시간 증가
     servo_pwm.ChangeDutyCycle(0)
 
 def motor_forward():
+    """DC 모터 전진."""
     global current_speed
     if current_speed < MAX_SPEED:
         current_speed += SPEED_INCREMENT
@@ -64,6 +66,7 @@ def motor_forward():
     print(f"전진: 속도 {current_speed}%")
 
 def motor_slow_down():
+    """DC 모터 감속."""
     global current_speed
     if current_speed > 0:
         current_speed -= SPEED_INCREMENT
@@ -77,6 +80,7 @@ def motor_slow_down():
         print(f"속도 감소: 속도 {current_speed}%")
 
 def motor_stop():
+    """DC 모터 정지."""
     global current_speed
     current_speed = 0
     GPIO.output(IN1, GPIO.LOW)
@@ -87,7 +91,7 @@ def motor_stop():
 set_servo_angle(current_angle)
 
 def get_direction(angle):
-    """현재 각도에 따라 좌회전, 직진, 우회전 반환"""
+    """현재 각도에 따라 좌회전, 직진, 우회전 반환."""
     for direction, (start, end) in ANGLE_RANGES.items():
         if start <= angle <= end:
             return direction
@@ -125,42 +129,33 @@ if not cap.isOpened():
     print("웹캠을 열 수 없습니다.")
     exit()
 
-capture_interval = 0.1  # 캡처 간격을 0.1초로 줄임
+capture_interval = 0.1  # 캡처 간격
 burst_capture_count = 3  # 한 번에 저장할 이미지 수
 burst_interval = 0.05  # 버스트 캡처 간격
 
 def capture_images():
     global last_capture_time
     last_capture_time = time.time()
-    while True:  # 무한 캡처 루프
-        ret, frame = cap.read()  # 웹캠에서 프레임 읽기
+    while True:
+        ret, frame = cap.read()
         if not ret:
             print("웹캠에서 프레임을 읽을 수 없습니다.")
             break
 
         current_time = time.time()
         if current_time - last_capture_time >= capture_interval:
-            # 실시간 영상 표시
-            cv2.imshow("Camera View", frame)
-
-            # 캡처 조건: 각도에 따라 이미지 저장
             direction = get_direction(current_angle)
             if direction:
                 range_folder = os.path.join(base_save_path, direction)
-                for i in range(burst_capture_count):  # 버스트 캡처
+                for i in range(burst_capture_count):
                     burst_time = datetime.datetime.now().strftime('%y%m%d_%H%M%S_%f')
                     filename = os.path.join(range_folder, f"{direction}_{burst_time}_burst{i}.jpg")
-                    try:
-                        if cv2.imwrite(filename, frame):
-                            print(f"이미지 저장 성공 ({direction}): {filename}")
-                        else:
-                            print(f"이미지 저장 실패: {filename}")
-                    except Exception as e:
-                        print(f"이미지 저장 중 에러 발생: {e}")
-                    time.sleep(burst_interval)  # 버스트 간격 대기
-
-                last_capture_time = current_time
-            
+                    if cv2.imwrite(filename, frame):
+                        print(f"이미지 저장 성공 ({direction}): {filename}")
+                    else:
+                        print(f"이미지 저장 실패: {filename}")
+                    time.sleep(burst_interval)
+            last_capture_time = current_time
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
 

@@ -62,7 +62,7 @@ model.compile(
 history = model.fit(
     X_train, y_train,  # 훈련 데이터
     validation_data=(X_val, y_val),  # 검증 데이터
-    epochs=10,  # 반복 학습 횟수
+    epochs=50,  # 반복 학습 횟수
     batch_size=32,  # 배치 크기
     verbose=1  # 출력 옵션
 )
