@@ -54,7 +54,7 @@ def draw_arrow(image, direction, color):
 
 # === 모델 및 데이터 로드 ===
 model_path = "/home/pi/AL_CAR/lane_following_model.h5"
-data_path = "/home/pi/AL_CAR/processed_images"
+data_path = "/home/pi/AL_CAR/images"
 image_size = (64, 64)
 
 # 모델 로드
