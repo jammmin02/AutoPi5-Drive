@@ -51,8 +51,8 @@ def set_servo_angle(angle):
     """서보모터 각도를 설정합니다."""
     duty = 2 + (angle / 18)
     servo_pwm.ChangeDutyCycle(duty)
-    time.sleep(0.5)  # 신호 유지 시간을 0.5초로 증가
-    servo_pwm.ChangeDutyCycle(0)  # 신호를 꺼서 안정적으로 동작
+    time.sleep(0.3)  # 신호 유지 시간 증가
+    servo_pwm.ChangeDutyCycle(0)
 
 def motor_forward():
     """DC 모터 전진."""
@@ -106,11 +106,11 @@ def on_press(key):
         elif key == keyboard.Key.down:
             motor_slow_down()
         elif key == keyboard.Key.left:
-            current_angle = max(0, current_angle - ANGLE_INCREMENT)  # 최소 0도로 제한
+            current_angle = max(0, current_angle - ANGLE_INCREMENT)
             set_servo_angle(current_angle)
             print(f"서보모터 왼쪽 회전: 각도 {current_angle}도")
         elif key == keyboard.Key.right:
-            current_angle = min(60, current_angle + ANGLE_INCREMENT)  # 최대 60도로 제한
+            current_angle = min(60, current_angle + ANGLE_INCREMENT)
             set_servo_angle(current_angle)
             print(f"서보모터 오른쪽 회전: 각도 {current_angle}도")
         elif key == keyboard.Key.space:
