@@ -1,7 +1,7 @@
 import tensorflow as tf
 import numpy as np
 import os
-
+import cv2  # OpenCV 모듈 임포트
 # 전처리된 데이터 로드
 def load_processed_data(data_path, image_size):
     X = []  # 이미지 데이터
@@ -23,7 +23,7 @@ def load_processed_data(data_path, image_size):
     return np.array(X), np.array(y)
 
 # 데이터 경로와 크기 설정
-data_path = "/path/to/processed_dataset"
+data_path = "//home//pi//AL_CAR//processed_images"
 image_size = (64, 64)
 
 # 데이터 로드
